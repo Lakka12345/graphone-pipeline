@@ -51,3 +51,4 @@ python -m src.storage.sheets
 
 ## Google Sheets output
 [Link to sheet](https://docs.google.com/spreadsheets/d/1FXHS9cuOqoH1Yktw1rIuRzKUbjIA_RDxZX7AJ4N1YN4/edit?gid=0#gid=0)
+![Google Sheets Output](sheet_screenshot.png)

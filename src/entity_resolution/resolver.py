@@ -121,5 +121,68 @@ def resolve_all_startups():
     return resolved
 
 
+
+def resolve_all_products():
+    """Run entity resolution on all saved products."""
+    import sqlite3, json
+    from src.models.schemas import EntityMapping
+    from datetime import datetime
+
+    conn = sqlite3.connect("data/pipeline.db")
+    rows = conn.execute("SELECT record_id, data FROM products").fetchall()
+    resolved = 0
+
+    for record_id, data_json in rows:
+        data = json.loads(data_json)
+        raw_name = data["content"].get("startup_name") or data["content"].get("product_name")
+        source_url = data["source"]["url"]
+
+        if not raw_name:
+            continue
+
+        # Normalize and fuzzy match
+        normalized_raw = normalize(raw_name)
+        normalized_canonicals = {normalize(c): c for c in CANONICAL_ENTITIES}
+
+        # Exact match first
+        canonical = raw_name
+        confidence = 0.0
+        for c in CANONICAL_ENTITIES:
+            if raw_name.lower() == c.lower():
+                canonical = c
+                confidence = 100.0
+                break
+
+        # Fuzzy match if no exact
+        if confidence == 0.0:
+            match = process.extractOne(
+                normalized_raw,
+                normalized_canonicals.keys(),
+                scorer=fuzz.token_sort_ratio,
+                score_cutoff=THRESHOLD
+            )
+            if match:
+                matched_normalized, score, _ = match
+                canonical = normalized_canonicals[matched_normalized]
+                confidence = score
+
+        if canonical != raw_name and confidence > 0:
+            conn.execute(
+                "UPDATE products SET canonical_entity=? WHERE record_id=?",
+                (canonical, record_id)
+            )
+            conn.execute(
+                "INSERT OR REPLACE INTO entity_mappings VALUES (?,?,?,?,?,?)",
+                (raw_name, canonical, "PRODUCT", source_url,
+                 confidence, datetime.utcnow().isoformat())
+            )
+            resolved += 1
+
+    conn.commit()
+    conn.close()
+    print(f"Product entity resolution done. {resolved} products matched to canonical names.")
+    return resolved
+
 if __name__ == "__main__":
     resolve_all_startups()
+    resolve_all_products()
