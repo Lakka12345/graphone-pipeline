@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from src.models.schemas import PaperRecord, PaperContent, Source
-from src.storage.db import save_paper, is_seen
+from src.storage.db import has_seen, mark_seen, save_paper
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -58,8 +58,10 @@ async def scrape_arxiv(max_results=1000):
         for entry in entries:
             paper_url = entry.find("atom:id", ns).text.strip()
 
-            if is_seen(paper_url):
+            if has_seen(paper_url):
                 continue
+
+            mark_seen(paper_url)
 
             title = entry.find("atom:title", ns).text.strip().replace("\n", " ")
 

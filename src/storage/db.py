@@ -83,18 +83,27 @@ def get_conn():
     finally:
         conn.close()
 
-def is_seen(url: str) -> bool:
-    """Returns True if URL already processed. Marks it as seen if not."""
+def has_seen(url: str) -> bool:
+    """Return whether a normalized URL has already been processed."""
     h = hashlib.sha256(url.strip().lower().encode()).hexdigest()
     with get_conn() as conn:
         row = conn.execute("SELECT 1 FROM seen_urls WHERE url_hash=?", (h,)).fetchone()
-        if row:
-            return True
+        return row is not None
+
+
+def mark_seen(url: str) -> None:
+    """Record a URL after it has passed the crawler's eligibility checks."""
+    h = hashlib.sha256(url.strip().lower().encode()).hexdigest()
+    with get_conn() as conn:
         conn.execute(
             "INSERT OR IGNORE INTO seen_urls VALUES (?,?,?)",
             (h, url, datetime.utcnow().isoformat())
         )
-        return False
+
+
+def is_seen(url: str) -> bool:
+    """Return whether a URL is seen, retaining the legacy helper name."""
+    return has_seen(url)
 
 def save_startup(record):
     with get_conn() as conn:

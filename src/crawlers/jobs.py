@@ -6,19 +6,20 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from src.models.schemas import JobRecord, JobContent, Source
-from src.storage.db import save_job, is_seen
+from src.storage.db import has_seen, mark_seen, save_job
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 JOB_SOURCES = [
-    {"name": "RemoteOK AI",      "url": "https://remoteok.com/remote-ai-jobs.rss"},
-    {"name": "HackerNews Jobs",  "url": "https://hnrss.org/jobs"},
-    {"name": "We Work Remotely", "url": "https://weworkremotely.com/categories/remote-programming-jobs.rss"},
-    {"name": "Remotive AI",      "url": "https://remotive.com/remote-jobs/feed/software-dev"},
-    {"name": "AI Jobs",          "url": "https://aijobs.net/feed/"},
+    {"name": "Jobicy AI",         "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=ai"},
+    {"name": "Jobicy ML",         "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=machine-learning"},
+    {"name": "Jobicy Data",       "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=data-science"},
+    {"name": "Jobicy Remote Dev", "url": "https://jobicy.com/?feed=job_feed&job_categories=dev"},
+    {"name": "HackerNews Jobs",   "url": "https://hnrss.org/jobs"},
+    {"name": "We Work Remotely",  "url": "https://weworkremotely.com/categories/remote-programming-jobs.rss"},
+    {"name": "Remotive",          "url": "https://remotive.com/remote-jobs/feed/software-dev"},
 ]
-
 
 def parse_feed_date(entry) -> datetime | None:
     for attr in ("published_parsed", "updated_parsed"):
@@ -33,8 +34,7 @@ def parse_feed_date(entry) -> datetime | None:
 
 def is_within_24h(dt: datetime | None) -> bool:
     if dt is None:
-        # if no date found, assume it's recent and include it
-        return True
+        return True  # include if no date found
     now = datetime.now(timezone.utc)
     return (now - dt).total_seconds() < 86400
 
@@ -62,13 +62,15 @@ async def fetch_jobs(session, source):
 
         for entry in feed.entries:
             url = entry.get("link", "")
-            if not url or is_seen(url):
+            if not url or has_seen(url):
                 continue
 
             posted_at = parse_feed_date(entry)
 
             if not is_within_24h(posted_at):
                 continue
+
+            mark_seen(url)
 
             title = entry.get("title", "").strip()
             summary = entry.get("summary", "").strip()[:500]

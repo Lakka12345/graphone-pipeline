@@ -5,7 +5,7 @@ import logging
 from dotenv import load_dotenv
 
 from src.models.schemas import ProductRecord, ProductContent, Source
-from src.storage.db import save_product, is_seen
+from src.storage.db import has_seen, mark_seen, save_product
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -64,8 +64,10 @@ def parse_markdown_tools(markdown: str, source_name: str) -> list:
 
         if not name or not url:
             continue
-        if is_seen(url):
+        if has_seen(url):
             continue
+
+        mark_seen(url)
 
         pricing = detect_pricing(description)
 

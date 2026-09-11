@@ -6,7 +6,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from src.models.schemas import StartupRecord, StartupContent, Source
-from src.storage.db import save_startup, is_seen
+from src.storage.db import has_seen, mark_seen, save_startup
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -49,8 +49,10 @@ async def scrape_yc_startups(target=1000):
                 name = company.get("name", "").strip()
                 source_url = f"https://www.ycombinator.com/companies/{company.get('slug', '')}"
 
-                if not name or is_seen(source_url):
+                if not name or has_seen(source_url):
                     continue
+
+                mark_seen(source_url)
 
                 record = StartupRecord(
                     source=Source(name="Y Combinator", url=source_url),

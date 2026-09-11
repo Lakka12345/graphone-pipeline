@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from src.models.schemas import NewsRecord, NewsContent, Source
-from src.storage.db import save_news, is_seen
+from src.storage.db import has_seen, mark_seen, save_news
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -37,7 +37,8 @@ def is_within_24h(dt: datetime | None) -> bool:
     if dt is None:
         return False
     now = datetime.now(timezone.utc)
-    return (now - dt).total_seconds() < 86400
+    age = (now - dt).total_seconds()
+    return 0 <= age < 86400
 
 
 async def fetch_feed(session, source):
@@ -56,13 +57,15 @@ async def fetch_feed(session, source):
 
         for entry in feed.entries:
             url = entry.get("link", "")
-            if not url or is_seen(url):
+            if not url or has_seen(url):
                 continue
 
             published_at = parse_feed_date(entry)
 
             if not is_within_24h(published_at):
                 continue  # skip anything older than 24 hours
+
+            mark_seen(url)
 
             title = entry.get("title", "").strip()
             summary = entry.get("summary", "").strip()[:500]
