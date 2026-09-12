@@ -12,13 +12,13 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 JOB_SOURCES = [
-    {"name": "Jobicy AI",         "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=ai"},
-    {"name": "Jobicy ML",         "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=machine-learning"},
-    {"name": "Jobicy Data",       "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=data-science"},
-    {"name": "Jobicy Remote Dev", "url": "https://jobicy.com/?feed=job_feed&job_categories=dev"},
-    {"name": "HackerNews Jobs",   "url": "https://hnrss.org/jobs"},
-    {"name": "We Work Remotely",  "url": "https://weworkremotely.com/categories/remote-programming-jobs.rss"},
-    {"name": "Remotive",          "url": "https://remotive.com/remote-jobs/feed/software-dev"},
+    {"name": "Jobicy AI",        "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=ai"},
+    {"name": "Jobicy ML",        "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=machine-learning"},
+    {"name": "Jobicy Data",      "url": "https://jobicy.com/?feed=job_feed&job_categories=dev&job_tags=data-science"},
+    {"name": "HackerNews Jobs",  "url": "https://hnrss.org/jobs"},
+    {"name": "We Work Remotely", "url": "https://weworkremotely.com/categories/remote-programming-jobs.rss"},
+    {"name": "Remotive",         "url": "https://remotive.com/remote-jobs/feed/software-dev"},
+    {"name": "AI Jobs Board",    "url": "https://aijobs.net/feed/"},
 ]
 
 def parse_feed_date(entry) -> datetime | None:

@@ -103,7 +103,7 @@ def export_papers(sheet):
 def export_news(sheet):
     print("Exporting news...")
     records = fetch_all("news")
-    headers = ["title", "summary", "author", "published_at",
+    headers = ["title", "summary", "full_text", "author", "published_at",
                "article_url", "source_name", "collected_at"]
     rows = []
     for r in records:
@@ -111,6 +111,7 @@ def export_news(sheet):
         rows.append([
             c.get("title", ""),
             c.get("summary", ""),
+            c.get("full_text", ""),
             c.get("author", ""),
             c.get("published_at", ""),
             c.get("article_url", ""),
